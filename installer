@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# Stop if anything goes wrong
+set -e
+
+### Installer for Linux-Helper-Scripts
+# Copies all scrips to INSTALL_LOCATION where the default location is $HOME/.local/bin
+# Adds path variable to PATH_FILE_LOCATION where the default location is $HOME/.bashrc, if $PATH does not contain the path INSTALL_LOCATION
+# Scripts get permissions modified to ugo+x or a+x
+
+### Functions used in script
+# basename  - get file base name in file path
+# sudo      - used to give file execute permissions
+# chmod     - change file permissions
+# cp        - copy utility to copy file
+# find      - get list of files to copy
+
+# Default location: $HOME/.local/bin
+INSTALL_LOCATION=$HOME/.local/bin
+
+# Default location: $HOME/.bashrc
+PATH_FILE_LOCATION=$HOME/.bashrc
+
+# Permissions to be added to each helper script
+PERMISSIONS="a+x"
+
+function install_scripts(){
+  # check if INSTALL_LOCATION exists
+  if [[ ! -d $INSTALL_LOCATION ]]; then
+    mkdir -p $INSTALL_LOCATION
+  fi
+
+  # go into scripts directory
+  cd scripts
+
+  # get list of all scripts in directory
+  for e in $(find); do
+
+      # check if $e is a regular file
+      if [[ -f $e ]]; then
+
+        # get file base name
+        filename=$(basename $e);
+
+        echo -e "Installing ${e:2}"
+
+        # copy file to INSTALL_LOCATION
+        cp $e $INSTALL_LOCATION/$filename;
+
+        # change file execute permissions
+        sudo chmod $PERMISSIONS $INSTALL_LOCATION/$filename;
+      fi
+  done
+}
+
+# Add path to .bashrc file
+function add_path() {
+    if [[ $PATH != *"$INSTALL_LOCATION"* ]]; then
+        echo -e "Adding $INSTALL_LOCATION to PATH variable"
+        PATH=$INSTALL_LOCATION:$PATH
+        echo -e "\n# Linux-Helper-Scripts path added to env PATH\nPATH=$INSTALL_LOCATION:\$PATH" >> $PATH_FILE_LOCATION
+        export PATH
+    else
+        echo -e "$INSTALL_LOCATION already in PATH variable"
+    fi
+}
+
+echo -e "-----------------------------\nLinux-Helper-Script Installer\n-----------------------------"
+echo -e "Press [enter] to install"
+read
+install_scripts;
+add_path
+echo -e "Installation Complete!"

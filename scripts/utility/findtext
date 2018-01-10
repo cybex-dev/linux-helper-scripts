@@ -15,6 +15,7 @@
 
 # Check if user wants help
 if [[ $1 == "-h" ]] || [[ $1 == "--help" ]] || [[ -z $1 ]]; then
+    echo -e "================";
     echo -e "FindText Helper";
     echo -e "================";
     echo -e "Findtext searches each file in the current directory recursively for a string match.\n";
