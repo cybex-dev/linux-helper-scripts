@@ -1,0 +1,46 @@
+#!/bin/bash
+
+### Input
+# Input $@ (all) - Uses all parameters as search
+# e.g.  findtext hello world I am foo
+#       or
+#       findtext "hello world I am foo"
+#
+# This will return the same result
+
+### Uses functions
+# find  - get a list of all files in current directory
+# cat   - echo contents on file
+# grep  - filter contents of file checking for a string match
+
+# Check if user wants help
+if [[ $1 == "-h" ]] || [[ $1 == "--help" ]] || [[ -z $1 ]]; then
+    echo -e "FindText Helper";
+    echo -e "================";
+    echo -e "Findtext searches each file in the current directory recursively for a string match.\n";
+    echo -e "Syntax:";
+    echo -e "\tfindtext [search string]";
+    echo -e "\t\tAll parameters are used for searching, thus using:";
+    echo -e "\t\t\tfindtext hello world I am foo";
+    echo -e "\t\t\t\tor";
+    echo -e "\t\t\tfindtext \"hello world I am foo";
+    echo -e "\t\tWill return the same result";
+    echo -e "\t-h | --help\t\tShows this message";
+    exit 1;
+fi
+
+# Sort through each file found in directory " . "
+for e in $(find);do
+    # Filter file output
+    output=$(cat $e 2> /dev/null | grep "$@");
+
+    # If output is NOT empty, means we found something.
+    if [[ ! -z $output ]]; then
+        # Show file and complete line where text is found
+        echo -e "File:\t\t$e\n"
+        echo -e "-----------------------------------\n"
+        echo -e "\t$output\n"
+        echo -e "===============================================================\n"
+    fi;
+# done
+done
