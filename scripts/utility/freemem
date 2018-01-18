@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Export application name to APP_NAME for usage in bash compeletion
+APP_NAME=freemem;
+export APP_NAME;
+
+# Script clears cache & free's memory
+# Level:
+#   1 - PageCache
+#   2 - DEntries & Inodes
+#   3 - PageCache, PDEntries &
+LEVEL=0;
+
+# Determine level
+case $1 in
+  "--cache")
+    # Free caches
+    LEVEL=1;
+    ;;
+
+  "--deep")
+    # Free inodes & dentries
+    LEVEL=2;
+    ;;
+
+  "--all")
+    # Free caches, inodes & dentries
+    LEVEL=3;
+    ;;
+
+    # For bash completion
+  "shortlist")
+    echo "--cache --deep --all --help";
+    ;;
+
+  *|"-h"|"--help")
+    # Show help and handle default
+    show_help;
+    exit 1;
+    ;;
+esac
+
+# Sync disks first
+echo "Syncing discs & File buffers";
+sync;
+
+# Check if sync failed
+if [[ $? -ne "0" ]]; then
+  echo "Failed to sync";
+  exit 1;
+fi
+
+# Free Caches
+echo "Freeing caches";
+echo $LEVEL > /proc/sys/vm/drop_caches;
+
+# Check if caches free'ed
+if [[ $? -eq "0" ]]; then
+  echo "Success";
+else
+  echo "Failed";
+fi

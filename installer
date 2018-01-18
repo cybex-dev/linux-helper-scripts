@@ -10,19 +10,25 @@ set -e
 
 ### Functions used in script
 # basename  - get file base name in file path
-# sudo      - used to give file execute permissions
 # chmod     - change file permissions
 # cp        - copy utility to copy file
 # find      - get list of files to copy
 
+# Flag to install bash-completion script, dependant on if script is run as root
+bBASH=false
+
 # Default location: $HOME/.local/bin
 INSTALL_LOCATION=$HOME/.local/bin
+
+# Bash-Completition Location
+BASH_COMP_LOCATION=/etc/bash_completion.d
 
 # Default location: $HOME/.bashrc
 PATH_FILE_LOCATION=$HOME/.bashrc
 
 # Permissions to be added to each helper script
 PERMISSIONS="a+x"
+BASH_COMP_PERMISSIONS=644
 
 function install_scripts(){
   # check if INSTALL_LOCATION exists
@@ -48,9 +54,38 @@ function install_scripts(){
         cp $e $INSTALL_LOCATION/$filename;
 
         # change file execute permissions
-        sudo chmod $PERMISSIONS $INSTALL_LOCATION/$filename;
+        chmod $PERMISSIONS $INSTALL_LOCATION/$filename;
       fi
   done
+
+  cd ..
+}
+
+function install_bash_compeletion() {
+  # Installs bash completion script for all apps using framework
+  echo "Checking BASH auto-completion"
+
+  # Checking if bash-autocompletion directory exists
+  if [[ ! -d $BASH_COMP_LOCATION ]]; then
+    # Directory doesn't exist, creating
+    echo "Creating $BASH_COMP_LOCATION"
+    mkdir -p $BASH_COMP_LOCATION;
+  fi
+
+  # Check if bash-helper script exists
+  if [[ ! -f $BASH_COMP_LOCATION/bash-helper ]]; then
+    # Bash completion sciprt does not exist, installing
+    echo "Installing bash-helper script to $BASH_COMP_LOCATION"
+
+    # changing to scripts/bash-completion directory
+    cd $PWD/scripts/bash-completion
+
+    # copying over bash-helper file
+    cp $PWD/bash-helper $BASH_COMP_LOCATION
+  fi
+
+  # setting file permissions regardless
+  chmod $BASH_COMP_PERMISSIONS $BASH_COMP_LOCATION/bash-helper
 }
 
 # Add path to .bashrc file
@@ -65,9 +100,43 @@ function add_path() {
     fi
 }
 
+function check_root() {
+  # Check if executed as root
+  if [[ $EUID -eq 0 ]]; then
+    # Executed as root, set new install variables
+    echo -e "System install to /usr/bin"
+    INSTALL_LOCATION=/usr/bin
+    PATH_FILE_LOCATION=/etc/profile
+    bBASH=true
+
+  else
+    # Executed as normal user, here bash completion will not copy over
+    echo -e "User install $INSTALL_LOCATION to directory (bash-completion will not work)"
+    INSTALL_LOCATION=$HOME/.local/bin
+    PATH_FILE_LOCATION=$HOME/.bashrc
+    bBASH=false
+  fi
+}
+
+# Welcome
 echo -e "-----------------------------\nLinux-Helper-Script Installer\n-----------------------------"
+check_root
+
+# Wait for user input
 echo -e "Press [enter] to install"
 read
+
+# Install scripts
 install_scripts;
-add_path
+
+# Try install bash-completion
+if [[ $bBASH == "true" ]]; then
+  # Install bash
+  install_bash_compeletion;
+fi
+
+# Try add path
+add_path;
+
+# Notify complete
 echo -e "Installation Complete!"

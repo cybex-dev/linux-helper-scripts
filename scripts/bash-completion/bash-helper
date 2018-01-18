@@ -1,0 +1,17 @@
+# Bash completion framework uses:
+#   APP_NAME - application executable/script name which shold be in path or direct link provided
+#   shortlist - should allow a argument named "shortlist" which provides various arguments to allow autocomplete
+
+_script()
+{
+  BIN_LOCATION=$(which $APP_NAME)
+  _script_commands=$($BIN_LOCATION shortlist)
+
+  local cur
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  COMPREPLY=( $(compgen -W "${_script_commands}" -- ${cur}) )
+
+  return 0
+}
+complete -o nospace -F _script $BIN_LOCATION

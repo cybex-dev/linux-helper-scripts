@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Export application name to APP_NAME for usage in bash compeletion
+APP_NAME=freemem
+export APP_NAME
+
 ### Input
 # Input $@ (all) - Uses all parameters as search
 # e.g.  findtext hello world I am foo
